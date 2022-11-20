@@ -21,6 +21,7 @@ public class FilmController {
     private final Map<Integer, Film> films = new HashMap<>();
     int idCounter = 1;
     private final LocalDate birthOfCinema = LocalDate.of(1895, Month.DECEMBER, 28);
+    private Film film;
 
     @GetMapping
     public Collection<Film> getAllFilms() {
@@ -40,6 +41,7 @@ public class FilmController {
             if (id == null) {
                 film.setId(getUpdateIdNumber());
             }
+
             films.put(film.getId(), film);
 
         } else {
@@ -51,6 +53,9 @@ public class FilmController {
     @PutMapping
     public Film updateFilm(@RequestBody Film film) {
         log.info("Создан запрос PUT");
+        if (!films.containsKey(film.getId())) {
+            throw new ObjectAlreadyExistException("Фильм с таким ID отсутствует");
+        }
         if (!film.getName().isBlank() && (film.getDescription().length() <= 200) &&
                 (film.getReleaseDate().isAfter(birthOfCinema)) && (film.getDuration() > 0)) {
             if (films.containsKey(film.getId())) {
