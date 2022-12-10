@@ -6,6 +6,8 @@ import org.junit.jupiter.api.function.Executable;
 import ru.yandex.practicum.filmorate.exception.InvalidInputException;
 import ru.yandex.practicum.filmorate.exception.ObjectAlreadyExistException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage.InMemoryFilmStorage;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -14,12 +16,19 @@ import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest extends FilmController {
+   public FilmControllerTest(FilmService filmService) {
+        super(filmService);
+    }
+
     @Test
     void shouldPutFilm() {
         Film film = new Film(1, "Ветер", "Проверочное",
                 LocalDate.of(2020, Month.JANUARY, 20), 60);
-        Film filmBlank = new Film(2, "Ветер", "Проверочное",
+        Film filmBlank = new Film("Ветер", "Проверочное",
                 LocalDate.of(2020, Month.JANUARY, 20), 60);
+        Film film1 = new Film(1, "FFF", "DDD",
+                LocalDate.of(2020, Month.JANUARY, 20),60);
+                )
 
         Assertions.assertEquals(film, createFilm(film));
     }
