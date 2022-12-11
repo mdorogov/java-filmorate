@@ -21,10 +21,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-
+    @Autowired
     private final FilmService filmService;
 
-    @Autowired
+
     public FilmController(FilmService filmService) {
         this.filmService = filmService;
     }

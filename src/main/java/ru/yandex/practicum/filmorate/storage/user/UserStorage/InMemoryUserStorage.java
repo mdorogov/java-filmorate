@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.InvalidInputException;
 import ru.yandex.practicum.filmorate.exception.ObjectAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Repository
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
     private static final Map<Integer, User> users = new HashMap<>();
@@ -21,23 +21,18 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User createUser(User user) {
         log.info("вызван метод create класса InMemoryUserStorage");
-        String email = user.getEmail();
-        String login = user.getLogin();
-        String name = user.getName();
-        LocalDate birthday = user.getBirthday();
+
         if (users.containsKey(user.getId())) {
             throw new ObjectAlreadyExistException("Пользователь с таким ID  уже создан");
         }
-        if (!email.isBlank() && email.contains("@") && !login.isBlank() &&
-                !login.contains(" ") && birthday.isBefore(LocalDate.now())) {
-            if (name == null || name.isBlank()) {
-                user.setName(login);
-            }
-            user.setId(getUpdateIdNumber());
-            users.put(user.getId(), user);
-        } else {
+        if (!validation(user)) {
             throw new ValidationException("Не соблюдены условия значений для добавления пользователя");
         }
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+        user.setId(getUpdateIdNumber());
+        users.put(user.getId(), user);
         return user;
     }
 
@@ -50,30 +45,20 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User updateUser(User user) {
         log.info("вызван метод updateUser");
-        if (users.containsKey(user.getId())) {
-            String email = user.getEmail();
-            String login = user.getLogin();
-            LocalDate birthday = user.getBirthday();
-            if (!email.isBlank() && email.contains("@") && !login.isBlank() &&
-                    !login.contains(" ") && birthday.isBefore(LocalDate.now())) {
+        if (!users.containsKey(user.getId())) {
+            throw new InvalidInputException("Нет такого пользователя");
+        }
+        if (!validation(user)) {
+            throw new ValidationException("Не соблюдены условия значений для добавления фильма");
+        }
                 if (user.getName().isBlank()) {
-                    user.setName(login);
+                    user.setName(user.getLogin());
                 }
                 if (users.containsKey(user.getId())) {
                     users.remove(user.getId());
                     users.put(user.getId(), user);
-                } else {
-                    throw new ValidationException("Не соблюдены условия значений для добавления фильма");
                 }
-
-            } else {
-                throw new ValidationException("Не соблюдены условия значений для добавления фильма");
-            }
             return user;
-        } else {
-            throw new InvalidInputException("Такого пользователя нет");
-        }
-
     }
 
     @Override
@@ -96,4 +81,13 @@ public class InMemoryUserStorage implements UserStorage {
     public User getUserById(int id) {
         return getUsers().get(id);
     }
+
+    @Override
+public boolean validation(User user) {
+        String email = user.getEmail();
+        String login = user.getLogin();
+        LocalDate birthday = user.getBirthday();
+        return !email.isBlank() && email.contains("@") && !login.isBlank() &&
+                !login.contains(" ") && birthday.isBefore(LocalDate.now());
+}
 }

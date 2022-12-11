@@ -18,4 +18,5 @@ public interface UserStorage {
 
     User getUserById(int id);
 
+    boolean validation(User user);
 }

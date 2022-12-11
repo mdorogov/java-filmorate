@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.InvalidInputException;
 import ru.yandex.practicum.filmorate.exception.ObjectAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
+@Repository
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Integer, Film> films = new HashMap<>();
     int idCounter = 1;
@@ -30,17 +32,14 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film createFilm(Film film) {
         log.info("вызван метод createFilm");
-        Integer id = film.getId();
-        if (films.containsKey(id)) {
+        if (films.containsKey(film.getId())) {
             throw new ObjectAlreadyExistException("Фильм с таким ID уже создан");
         }
-        if (!film.getName().isBlank() && (film.getDescription().length() <= 200) &&
-                (film.getReleaseDate().isAfter(birthOfCinema)) && (film.getDuration() > 0)) {
-            film.setId(getUpdateIdNumber());
-            films.put(film.getId(), film);
-        } else {
+        if (!validation(film)) {
             throw new ValidationException("Не соблюдены условия значений для добавления фильма");
         }
+        film.setId(getUpdateIdNumber());
+        films.put(film.getId(), film);
         return film;
     }
 
@@ -50,15 +49,11 @@ public class InMemoryFilmStorage implements FilmStorage {
         if (!films.containsKey(film.getId())) {
             throw new InvalidInputException("Фильм с таким ID отсутствует");
         }
-        if (!film.getName().isBlank() && (film.getDescription().length() <= 200) &&
-                (film.getReleaseDate().isAfter(birthOfCinema)) && (film.getDuration() > 0)) {
-            if (films.containsKey(film.getId())) {
-                films.remove(film.getId());
-            }
-            films.put(film.getId(), film);
-        } else {
+        if (!validation(film)) {
             throw new ValidationException("Не соблюдены условия значений для добавления фильма");
         }
+            films.remove(film.getId());
+        films.put(film.getId(), film);
         return film;
     }
 
@@ -80,5 +75,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.get(id);
     }
 
-
+    @Override
+    public boolean validation(Film film) {
+        return !film.getName().isBlank() && (film.getDescription().length() <= 200) &&
+                (film.getReleaseDate().isAfter(birthOfCinema)) && (film.getDuration() > 0);
+    }
 }
